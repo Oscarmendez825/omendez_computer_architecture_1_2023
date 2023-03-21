@@ -6,12 +6,13 @@ section .data
     mode db 'w', 0    ; modo de escritura
 
 section .bss
-    buffer resb 8
+    buffer resb 11
     A resd 1
     B resd 1
     resultado resd 1
     buffTemp resd 1
     text resb 10         ; cadena de caracteres para almacenar el número convertido
+    temp resb 1
 
 section .text
     global _start
@@ -31,7 +32,7 @@ _start:
     mov eax, 3  
     mov ebx, eax 
     mov ecx, buffer 
-    mov edx, 8
+    mov edx, 11
     int 80h ; llama al sistema
 
 ; print del archivo
@@ -104,43 +105,23 @@ _RSA:
     mov ebx, 0
     mov eax, dword [A]
     mov ebx, dword [B]
-    add eax,ebx
+    shl eax, 8
+    add eax, ebx
 
-_potencia:
-    mov ecx, 10 ;aqui va el valor de D
-    mov edx, 1 ;contador de la potencia
-    imul eax, eax
-    add edx, 1
-    cmp ecx, edx
-    jne _potencia
-    jmp _modulo
 
-_modulo:
-    xor edx, edx   ; Inicializar edx a cero
-    mov ebx, 3     ; Colocar el divisor en ebx
-    div ebx        ; Dividir eax por ebx
-    mov eax, edx   ; Mover el valor de edx a eax (el resto de la división)
-    mov dword [resultado], eax
-
-_convertChar:
-    ; mover el número a un registro
-    mov eax, dword [resultado]
-
-    ; convertir el número en una cadena de caracteres
-    mov ebx, 10        ; base decimal
-    xor ecx, ecx       ; contador de dígitos
-    xor edx, edx       ; limpiar edx para la división
+toChar:
+    mov edx, eax      ; guardar el valor original de EAX en EDX
+    xor ecx, ecx      ; contador de dígitos
+    mov ebx, 10       ; base decimal
     .convert_loop:
-        div ebx          ; dividir eax por 10
-        add edx, '0'     ; convertir el resto a un carácter ASCII
-        mov [text + ecx], dl  ; guardar el carácter en la cadena de caracteres
-        inc ecx          ; incrementar el contador de dígitos
-        test eax, eax    ; comprobar si el cociente es cero
-        jnz .convert_loop ; si no es cero, seguir dividiendo
-
-
-
-
+        xor edx, edx  ; limpiar edx para la división
+        div ebx        ; dividir edx por 10
+        add dl, '0'    ; convertir el resto a un carácter ASCII
+        mov [text + ecx], dl ; guardar el carácter en la cadena de caracteres
+        add ecx, 1     ; incrementar el contador de dígitos
+        cmp eax, 0  ; comprobar si el cociente es cero
+        jne .convert_loop  ; si no es cero, seguir dividiendo
+    mov eax, edx      ; restaurar el valor original de EAX
 
 
 _end_program:
@@ -150,6 +131,8 @@ _end_program:
     mov ebx, 1 
     mov ecx, text 
     int 80h 
+    
+
 
 	mov eax, 1 ;preparar la llamada al sistema para salir
 	xor ebx, ebx ;código de salida 0
