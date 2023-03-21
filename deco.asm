@@ -114,9 +114,9 @@ toChar:
     xor ecx, ecx      ; contador de dígitos
     mov ebx, 10       ; base decimal
     .convert_loop:
-        xor edx, edx  ; limpiar edx para la división
-        div ebx        ; dividir edx por 10
-        add dl, '0'    ; convertir el resto a un carácter ASCII
+        xor edx, edx  ; 
+        div ebx        ; 
+        add dl, '0'    ; convertir numero a char
         mov [text + ecx], dl ; guardar el carácter en la cadena de caracteres
         add ecx, 1     ; incrementar el contador de dígitos
         cmp eax, 0  ; comprobar si el cociente es cero
