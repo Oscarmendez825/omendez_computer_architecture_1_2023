@@ -7,12 +7,13 @@ section .bss
     buffer resb 11
     A resd 1
     B resd 1
-    respuesta1 resb 9 ; reserva 32 bytes para la primera respuesta
+
+    respuesta1 resb 9 ; reserva 9 bytes el input de las llaves D y N
     D resd 2
     N resd 2
 
     text resb 10         ; cadena de caracteres para almacenar el número convertido
-
+    resultado resb 10    ;cadena de caracteres que almacena el resultado final
 section .text
     global _start
 
@@ -172,6 +173,32 @@ toChar:
         jne .convert_loop       
     mov eax, edx                ;devuelve el valor original de EAX
 
+resultSpin:
+    xor edx, edx
+    mov ecx, text
+contadorChars:
+    mov bl, [ecx]       ;cargar caracter en bl
+	cmp bl, 0          ;final del buffer cond parada
+	je preSpin
+	inc ecx             ;incrementa el puntero de los bits
+    inc edx
+	jmp contadorChars
+preSpin:
+    mov ecx, 0
+    xor eax, eax
+    xor ebx, ebx
+    sub edx, 1
+spinChars:
+    mov bl, byte[text+edx]
+    cmp edx, -1
+    je _end_program
+    mov [resultado + ecx], ebx
+    inc ecx
+    dec edx
+    jmp spinChars
+
+
+
 
 
 _end_program:
@@ -180,7 +207,7 @@ _end_program:
     ; print del archivo
     mov eax, 4 
     mov ebx, 1 
-    mov ecx, text 
+    mov ecx, resultado 
     int 80h 
 
 	mov eax, 1              ;preparar la llamada al sistema para salir
