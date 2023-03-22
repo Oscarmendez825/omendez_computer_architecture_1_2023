@@ -1,8 +1,9 @@
 section .data
     filename db 'nums.txt',0
-    res db 'res.txt',0
+    resultFile db 'resultados.txt',0
     mensaje1 db 'Ingrese las llaves D y N de la forma D N ', 0Ah ,'Las llaves D y N deben ser de 4 digitos, de lo contrario rellene con ceros:'
-
+    mode db 'w',0
+    error_msg db 'Error al abrir el archivo', 0
 section .bss
     buffer resb 11
     A resd 1
@@ -172,7 +173,6 @@ toChar:
         cmp eax, 0              ;comprueba si el cociente es cero y termina el ciclo si lo es
         jne .convert_loop       
     mov eax, edx                ;devuelve el valor original de EAX
-
 resultSpin:
     xor edx, edx
     mov ecx, text
@@ -191,19 +191,48 @@ preSpin:
 spinChars:
     mov bl, byte[text+edx]
     cmp edx, -1
-    je _end_program
+    je concatSpace
     mov [resultado + ecx], ebx
     inc ecx
     dec edx
     jmp spinChars
 
+concatSpace:
+    mov bl, ' '
+    mov [resultado + ecx], bl
 
 
+writeFile:
+    ; Abrir el archivo para lectura y escritura
+    mov eax, 5              ;abrir el archivo    
+    mov ebx, resultFile     ;archivo donde se desea escribir
+    mov ecx, 2       
+    mov edx, 0644    
+    int 80h          
+
+
+    mov ebx, eax     
+
+   ;toma referencia del final del archivo
+    mov eax, 19              ;lseek
+    mov ecx, 0       
+    mov edx, 2       
+    int 80h          
+
+    ; Escribir el resultado en el archivo
+    mov eax, 4              ;orden para escribir en el archivo
+    mov ecx, resultado      ;contenido a escribir
+    mov edx, 4              ;longitud del texto
+    int 80h          
+
+
+    ; Cerrar el archivo
+    mov eax, 6              ;orden para cerrar el archivo
+    int 80h          
 
 
 _end_program:
 
-    
     ; print del archivo
     mov eax, 4 
     mov ebx, 1 
