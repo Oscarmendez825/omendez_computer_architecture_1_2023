@@ -1,20 +1,75 @@
 section .data
     filename db 'nums.txt',0
     res db 'res.txt',0
-    mode db 'w', 0    ; modo de escritura
+    mensaje1 db 'Ingrese las llaves D y N de la forma D N ', 0Ah ,'Las llaves D y N deben ser de 4 digitos, de lo contrario rellene con ceros:'
 
 section .bss
     buffer resb 11
     A resd 1
     B resd 1
-    resultado resd 1
+    respuesta1 resb 9 ; reserva 32 bytes para la primera respuesta
+    D resd 2
+    N resd 2
+
     text resb 10         ; cadena de caracteres para almacenar el número convertido
 
 section .text
     global _start
 
 _start:
+    ; mostrar mensaje1
+    mov eax, 4
+    mov ebx, 1
+    mov ecx, mensaje1
+    mov edx, 117
+    int 0x80
 
+    ; leer respuesta1
+    mov eax, 3
+    mov ebx, 0
+    mov ecx, respuesta1
+    mov edx, 9
+    int 0x80
+
+_parse_D:
+	mov ecx, respuesta1 ;cargar la dirección del buffer en el registro ESI
+	xor eax, eax    ;poner a cero el registro EAX
+    xor ebx, ebx
+
+make_D:
+	mov bl, [ecx]   ;cargar caracter en bl
+	cmp bl, ' '     ;si el carácter es un espacio fin del numero
+	je end_D
+	sub bl, '0'     ;convertir el caracter a int
+	imul eax, 10    ;multiplicar el registro EAX por 10 para formar las decenas-centenas, etc
+	add eax, ebx    ;agrega el nuevo numero y lo pone en el espacio de las unidades
+	inc ecx         ;incrementa el puntero de los bits
+	jmp make_D
+
+end_D:
+	mov dword [D], eax  ;almacenar el número en memoria en A
+	inc ecx             ;salta el espacio en blanco y continua
+
+parse_N:
+	xor eax, eax        ;reinicia el registro EAX
+    xor ebx, ebx        ;reinicia el registro EBX
+    xor edx, edx
+make_N:
+	mov bl, [ecx]       ;cargar caracter en bl
+	cmp edx, 4           ;final del buffer cond parada
+	je end_N
+	sub bl, '0'         ;convertir el caracter a int
+	imul eax, 10        ;multiplicar el registro EAX por 10 para formar las decenas-centenas, etc
+	add eax, ebx        ;agrega el nuevo numero y lo pone en el espacio de las unidades
+	inc ecx             ;incrementa el puntero de los bits
+    inc edx
+	jmp make_N
+
+end_N:
+	mov dword [N], eax  ;almacenar el número en memoria
+    
+
+readFile:
     mov eax, 5      ;abrir el archivo
     mov ebx, filename 
     mov ecx, 0 
@@ -121,13 +176,12 @@ toChar:
 
 _end_program:
 
+    
     ; print del archivo
     mov eax, 4 
     mov ebx, 1 
     mov ecx, text 
     int 80h 
-    
-
 
 	mov eax, 1              ;preparar la llamada al sistema para salir
 	xor ebx, ebx            ;código de salida 0
