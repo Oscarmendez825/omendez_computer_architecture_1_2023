@@ -5,8 +5,8 @@ def mostrarImagenes(encriptada, desencriptada):
     ancho1 = 640
     alto1 = 480
 
-    ancho2 = 320
-    alto2 = 320
+    ancho2 = 480
+    alto2 = 640
 
     # Cargar los datos de imagen desde las listas de píxeles
     imagen1 = Image.new("L", (ancho1, alto1))

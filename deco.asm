@@ -1,10 +1,10 @@
 section .data
-    filename db '5.txt',0
+    filename db '0.txt',0
     resultFile db 'resultados.txt',0
     mensaje1 db 'Ingrese las llaves D y N de la forma D N ', 0Ah ,'Las llaves D y N deben ser de 4 digitos, de lo contrario rellene con ceros:'
     error_msg db 'Error al abrir el archivo', 0
 section .bss
-    buffer resb 635915
+    buffer resb 1712374
     A resd 1
     B resd 1
 
@@ -91,7 +91,7 @@ readFile:
     mov eax, 3      ;leer el archivo
     mov ebx, eax 
     mov ecx, buffer 
-    mov edx, 635915
+    mov edx, 1712374
     int 80h 
 
 ; print del archivo
