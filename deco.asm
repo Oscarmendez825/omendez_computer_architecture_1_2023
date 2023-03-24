@@ -1,10 +1,10 @@
 section .data
-    filename db '0.txt',0
+    filename db '5.txt',0
     resultFile db 'resultados.txt',0
     mensaje1 db 'Ingrese las llaves D y N de la forma D N ', 0Ah ,'Las llaves D y N deben ser de 4 digitos, de lo contrario rellene con ceros:'
     error_msg db 'Error al abrir el archivo', 0
 section .bss
-    buffer resb 1712374
+    buffer resb 635915
     A resd 1
     B resd 1
 
@@ -14,10 +14,12 @@ section .bss
 
     text resb 10         ; cadena de caracteres para almacenar el número convertido
     resultado resb 10    ;cadena de caracteres que almacena el resultado final
-    resultadoRSA resd 2
+    resultadoRSA resd 3
     valor_actual resd 3
 
     endFlag resd 1
+
+    cantidadChars resd 2
 
 section .text
     global _start
@@ -89,7 +91,7 @@ readFile:
     mov eax, 3      ;leer el archivo
     mov ebx, eax 
     mov ecx, buffer 
-    mov edx, 1712374
+    mov edx, 635915
     int 80h 
 
 ; print del archivo
@@ -218,12 +220,15 @@ par:
 end_RSA:
     xor eax, eax
     mov eax, dword[resultadoRSA]
-
+    
 toChar:
     xor edx, edx
     mov edx, eax                ; guardar el valor original de EAX en EDX
     xor ecx, ecx                ; contador de dígitos
     mov ebx, 10                 ;se ocupa dividir entre 10 para poder obtener digito a digito
+    mov dword[text + 2], '0'
+    mov dword[text + 1], '0'
+    mov dword[text], '0'
     .convert_loop:
         xor edx, edx            ;poner en cero el registro EDX
         div ebx                 ;divide EAX por EBX
@@ -245,14 +250,15 @@ contadorChars:
     inc edx
 	jmp contadorChars
 preSpin:
-    mov ecx, 0
+    xor ecx, ecx
     xor eax, eax
     xor ebx, ebx
+    mov dword[cantidadChars], edx
     sub edx, 1
 spinChars:
-    mov bl, byte[text+edx]
     cmp edx, -1
     je concatSpace
+    mov bl, byte[text+edx]
     mov [resultado + ecx], ebx
     inc ecx
     dec edx
@@ -261,7 +267,7 @@ spinChars:
 concatSpace:
     mov bl, ' '
     mov [resultado + ecx], bl
-
+    
 
 writeFile:
     ; Abrir el archivo para lectura y escritura
@@ -280,20 +286,25 @@ writeFile:
     mov edx, 2       
     int 80h          
 
+    xor edi, edi
+    mov edi, dword[cantidadChars]
+    add edi,1
+
     ; Escribir el resultado en el archivo
     mov eax, 4              ;orden para escribir en el archivo
     mov ecx, resultado      ;contenido a escribir
-    mov edx, 4              ;longitud del texto
+    mov edx, edi              ;longitud del texto
     int 80h          
 
 
     ; Cerrar el archivo
     mov eax, 6              ;orden para cerrar el archivo
-    int 80h          
+    int 80h    
 
     xor eax, eax
     mov eax, dword[endFlag]
     cmp eax, 1
+
     je _end_program
     jmp next_num
 
@@ -304,7 +315,7 @@ _end_program:
     ; print del archivo
     mov eax, 4 
     mov ebx, 1 
-    mov ecx, resultado 
+    mov ecx, buffer 
     int 80h 
 
 	mov eax, 1              ;preparar la llamada al sistema para salir
@@ -315,3 +326,4 @@ last:
     mov dword [B], eax  ;almacenar el número en memoria
     mov dword [endFlag], 1
     jmp _RSA
+

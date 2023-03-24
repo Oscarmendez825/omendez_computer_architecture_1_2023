@@ -24,7 +24,7 @@ def main():
     path = "./resultados.txt"
     ecryptedPic = fileReader(path)
     dencryptedPic = toList(ecryptedPic)
-    pic = Image.new('L', (480, 640))
+    pic = Image.new('L', (320, 320))
     pic.putdata(dencryptedPic)
     pic.save("test.png")
     pic.close()
