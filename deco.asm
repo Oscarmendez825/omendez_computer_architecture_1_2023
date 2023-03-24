@@ -1,11 +1,10 @@
 section .data
-    filename db 'nums.txt',0
+    filename db '0.txt',0
     resultFile db 'resultados.txt',0
     mensaje1 db 'Ingrese las llaves D y N de la forma D N ', 0Ah ,'Las llaves D y N deben ser de 4 digitos, de lo contrario rellene con ceros:'
-    mode db 'w',0
     error_msg db 'Error al abrir el archivo', 0
 section .bss
-    buffer resb 11
+    buffer resb 1712374
     A resd 1
     B resd 1
 
@@ -15,6 +14,11 @@ section .bss
 
     text resb 10         ; cadena de caracteres para almacenar el número convertido
     resultado resb 10    ;cadena de caracteres que almacena el resultado final
+    resultadoRSA resd 2
+    valor_actual resd 3
+
+    endFlag resd 1
+
 section .text
     global _start
 
@@ -85,7 +89,7 @@ readFile:
     mov eax, 3      ;leer el archivo
     mov ebx, eax 
     mov ecx, buffer 
-    mov edx, 11
+    mov edx, 1712374
     int 80h 
 
 ; print del archivo
@@ -97,7 +101,7 @@ readFile:
 
     mov eax, 6      ;cerrar el archivo
     int 80h 
-
+    
     jmp _split1
 
 
@@ -117,7 +121,7 @@ next_num:
 createN1:
 	mov bl, [esi]   ;cargar caracter en bl
 	cmp bl, 0       ;final del buffer cond parada
-	je _RSA             
+	je last             
 	cmp bl, ' '     ;si el carácter es un espacio fin del numero
 	je end_num1
 	sub bl, '0'     ;convertir el caracter a int
@@ -138,7 +142,7 @@ _split2:
 next_char2:
 	mov bl, [esi]       ;cargar caracter en bl
 	cmp bl, 0           ;final del buffer cond parada
-	je end_num2
+	je last
 	cmp bl, ' '         ;si el carácter es un espacio fin del numero
 	je end_num2
 	sub bl, '0'         ;convertir el caracter a int
@@ -151,16 +155,72 @@ end_num2:
 	mov dword [B], eax  ;almacenar el número en memoria
 	inc esi             ;salta el espacio en blanco y continua
 
+
 _RSA:
-    mov eax, 0          ;poner a cero el registro EAX
-    mov ebx, 0          ;poner a cero el registro EAX
+    xor eax, eax          ;poner a cero el registro EAX
+    xor ebx, ebx          ;poner a cero el registro EAX
+    xor edx, edx
+    xor ecx, ecx
     mov eax, dword [A]  ;toma el valor guardado en A y lo almacena en EAX
     mov ebx, dword [B]  ;toma el valor guardado en B y lo almacena en EBX
     shl eax, 8          ;toma un espacio de 8bits para luego concatenar A y B
     add eax, ebx        ;suma/concatena A y B
+    
 
+    mov dword[resultadoRSA], 1
+    mov ebx, dword[N]
+    mov ecx, dword[D]
+    xor edx, edx
+    div ebx
+    mov dword[valor_actual], edx
+
+binaryLoop:
+    cmp ecx, 0
+    jne multiplicaciones
+    jmp end_RSA
+
+multiplicaciones:
+    xor edx, edx
+    mov edx, ecx
+    and edx, 1
+    cmp edx, 1
+    je impar
+    jmp par
+
+impar:
+    xor eax, eax          ;poner a cero el registro EAX
+    xor edx, edx
+    mov eax, dword[resultadoRSA]
+    mov edx, dword[valor_actual]
+    imul eax, edx
+    xor edx, edx
+    div ebx
+    mov dword[resultadoRSA], edx
+    xor eax, eax
+    mov eax, dword[valor_actual]
+    imul eax, eax
+    xor edx, edx
+    div ebx
+    mov dword[valor_actual], edx
+    shr ecx, 1
+    jmp binaryLoop
+
+par:
+    xor eax, eax          ;poner a cero el registro EAX
+    xor edx, edx
+    mov eax, dword[valor_actual]
+    imul eax, eax
+    div ebx
+    mov dword[valor_actual], edx
+    shr ecx, 1
+    jmp binaryLoop
+
+end_RSA:
+    xor eax, eax
+    mov eax, dword[resultadoRSA]
 
 toChar:
+    xor edx, edx
     mov edx, eax                ; guardar el valor original de EAX en EDX
     xor ecx, ecx                ; contador de dígitos
     mov ebx, 10                 ;se ocupa dividir entre 10 para poder obtener digito a digito
@@ -175,6 +235,7 @@ toChar:
     mov eax, edx                ;devuelve el valor original de EAX
 resultSpin:
     xor edx, edx
+    xor ecx, ecx
     mov ecx, text
 contadorChars:
     mov bl, [ecx]       ;cargar caracter en bl
@@ -230,6 +291,13 @@ writeFile:
     mov eax, 6              ;orden para cerrar el archivo
     int 80h          
 
+    xor eax, eax
+    mov eax, dword[endFlag]
+    cmp eax, 1
+    je _end_program
+    jmp next_num
+
+
 
 _end_program:
 
@@ -243,3 +311,7 @@ _end_program:
 	xor ebx, ebx            ;código de salida 0
 	int 80h                 ;realizar la llamada al sistema
 
+last:
+    mov dword [B], eax  ;almacenar el número en memoria
+    mov dword [endFlag], 1
+    jmp _RSA
