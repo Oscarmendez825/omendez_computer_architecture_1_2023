@@ -1,31 +1,43 @@
 from PIL import Image
 
 def mostrarImagenes(encriptada, desencriptada):
-
+    """
+    Genera una ventana con las dos imagenes, la encriptada y la desencriptada
+    @param: lista con los pixeles encriptados
+    @param: lista con los pixeles desencriptados
+    """
+    #dimensiones imagen 1
     ancho1 = 640
-    alto1 = 480
-
+    largo1 = 480
+    #dimensiones imagen 2
     ancho2 = 480
-    alto2 = 640
+    largo2 = 640
 
-    # Cargar los datos de imagen desde las listas de píxeles
-    imagen1 = Image.new("L", (ancho1, alto1))
+    #se define la imagen 1 encriptada
+    imagen1 = Image.new("L", (ancho1, largo1))
     imagen1.putdata(encriptada)
 
-    imagen2 = Image.new("L", (ancho2, alto2))
+    #se define la imagen 2 desencriptada
+    imagen2 = Image.new("L", (ancho2, largo2))
     imagen2.putdata(desencriptada)
 
-    # Crear una nueva imagen que contenga ambas imágenes lado a lado
+    # unir ambas imagenes en una misma ventana
     ancho_total = ancho1 + ancho2
-    alto_total = max(alto1, alto2)
-    imagen_combinada = Image.new("LA", (ancho_total, alto_total))
-    imagen_combinada.paste(imagen1, (0, 0))
-    imagen_combinada.paste(imagen2, (ancho1, 0))
+    alto_total = max(largo1, largo2)
+    imagenUnida = Image.new("LA", (ancho_total, alto_total))
+    imagenUnida.paste(imagen1, (0, 0))
+    imagenUnida.paste(imagen2, (ancho1, 0))
 
-    # Mostrar la imagen combinada
-    imagen_combinada.show()
+    #mostrar las dos imagenes juntas
+    imagenUnida.show()
+
 
 def fileReader(path):
+    """
+    Se utiliza para leer los archivos
+    @param: la ruta de donde esta guardado el archivo
+    @return: el valor de la lectura en un string
+    """
     file = open(path, 'r')
     data = file.read()
     file.close()
@@ -33,6 +45,11 @@ def fileReader(path):
 
 
 def toList(data):
+    """
+    convierte la lectura de los archivos que son strings a listas de numeros
+    @param: string con la cadena leida
+    @return: lista con los valores numericos de los pixeles
+    """
     listedData = []
     temp = ''
     for i in data:
